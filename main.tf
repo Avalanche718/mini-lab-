@@ -1,12 +1,10 @@
-# 1. Resource Group
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.prefix}-rg"
+  name     = local.resource_group_name
   location = var.location
 }
 
-# 2. Storage Account (must be StorageV2, Files enabled implicitly)
 resource "azurerm_storage_account" "sa" {
-  name                     = "${var.prefix}sa"          # must be globally unique → 3-24 chars, lowercase
+  name                     = local.storage_account_name
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
@@ -15,29 +13,26 @@ resource "azurerm_storage_account" "sa" {
   min_tls_version          = "TLS1_2"
 }
 
-# 3. App Service Plan – Workflow Standard SKU (WS1 = smallest)
 resource "azurerm_service_plan" "plan" {
-  name                = "${var.prefix}-plan"
+  name                = local.service_plan_name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  os_type             = "Windows"           # Required for Logic App Standard
-  sku_name            = "WS1"               # WorkflowStandard tier
+  os_type             = "Windows"   # Required!
+  sku_name            = "WS1"       # Workflow Standard SKU
 }
 
-# 4. Logic App Standard
 resource "azurerm_logic_app_standard" "logic" {
-  name                       = "${var.prefix}-logic"
+  name                       = local.logic_app_name
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
   app_service_plan_id        = azurerm_service_plan.plan.id
   storage_account_name       = azurerm_storage_account.sa.name
-  storage_account_access_key = azurerm_storage_account.sa.primary_access_key   # Required by Terraform provider
+  storage_account_access_key = azurerm_storage_account.sa.primary_access_key   # Required by provider
 
   identity {
-    type = "SystemAssigned"   # Enables managed identity (lab requirement)
+    type = "SystemAssigned"   # Lab requirement: enabled
   }
 
-  # Minimal app settings (runtime)
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME"     = "node"
     "WEBSITE_NODE_DEFAULT_VERSION" = "~18"
@@ -46,18 +41,18 @@ resource "azurerm_logic_app_standard" "logic" {
   depends_on = [azurerm_storage_account.sa]
 }
 
-# 5. Integration Account – Standard SKU
 resource "azurerm_integration_account" "ia" {
-  name                = "${var.prefix}-ia"
+  name                = local.integration_account_name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku_name            = "Standard"
 }
 
-# 6. Upload sample XML Schema
 resource "azurerm_integration_account_schema" "schema" {
   name                     = "healthcare-message.xsd"
   resource_group_name      = azurerm_resource_group.rg.name
   integration_account_name = azurerm_integration_account.ia.name
   content                  = file("${path.module}/schemas/sample_schema.xsd")
+
+  depends_on = [azurerm_integration_account.ia]
 }
