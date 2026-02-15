@@ -52,7 +52,7 @@ resource "azurerm_integration_account_schema" "schema" {
   name                     = "healthcare-message.xsd"
   resource_group_name      = azurerm_resource_group.rg.name
   integration_account_name = azurerm_integration_account.ia.name
-  content                  = file("${path.module}/schemas/sample_schema.xsd")
+content = file("${path.module}/schemas/healthcare-message.xsd")  # Fix here
 
   depends_on = [azurerm_integration_account.ia]
 }
