@@ -1,21 +1,28 @@
-# Azure Logic App Standard + Integration Account Terraform Mini Lab
+# Azure Logic App Standard + Integration Account Mini Lab
 
-Deploys the required infrastructure for XML healthcare message processing.
-
-**Resources deployed:**
+**Deployed Resources:**
 - Resource Group
-- Storage Account (StorageV2)
-- App Service Plan (Workflow Standard WS1, Windows)
+- Storage Account (StorageV2, Standard, LRS)
+- App Service Plan (Workflow Standard WS1 SKU, Windows OS)
 - Logic App Standard (system-assigned managed identity enabled)
 - Integration Account (Standard SKU)
-- Sample XML schema uploaded
+- XML Schema (healthcare-message.xsd) uploaded to Integration Account
 
-**Key points followed:**
-- Variables used for all names/location
-- No hardcoded secrets (storage key referenced from resource)
-- Readable & formatted code
-- terraform init/plan/apply tested successfully
-- Managed identity enabled on Logic App
-- Schema visible in Integration Account
+**Constraints followed:**
+- Terraform only (no ARM/Bicep)
+- No hardcoded secrets (storage key referenced)
+- Variables + locals for naming/location
+- Readable, formatted code
+- Schema loaded via `file()`
 
-Run locally: terraform init → terraform plan → terraform apply
+**How to run:**
+1. `terraform init`
+2. `terraform plan`
+3. `terraform apply`
+
+**Validation:**
+- Apply succeeds
+- Logic App: Identity → System assigned = Enabled
+- Integration Account: Schemas → healthcare-message.xsd visible
+
+Screenshots: Included separately (Logic App overview/identity + Integration Account schemas).
